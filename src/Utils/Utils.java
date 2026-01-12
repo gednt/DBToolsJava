@@ -2,6 +2,25 @@ package Utils;
 
 public class Utils {
     //MODULOS DE MANIPULAÇAO DE DADOS
+    
+    /**
+     * Escapes SQL identifiers (table names, column names) by wrapping them in backticks
+     * to prevent SQL injection on identifiers.
+     * MySQL-specific: Backticks within the identifier are escaped by doubling them (` becomes ``).
+     * For example: `my`table` becomes `my``table`
+     * @param identifier The identifier to escape
+     * @return The escaped identifier wrapped in backticks
+     * @throws IllegalArgumentException if identifier is null or empty
+     */
+    private static String escapeIdentifier(String identifier) {
+        if (identifier == null || identifier.trim().isEmpty()) {
+            throw new IllegalArgumentException("Identifier cannot be null or empty");
+        }
+        // Double any existing backticks, then wrap the entire identifier in backticks
+        // This prevents SQL injection on table/column names
+        return "`" + identifier.replace("`", "``") + "`";
+    }
+    
     /// <summary>
     /// Returns a String based on the parameters given<br/>
     /// </summary>
@@ -21,6 +40,52 @@ public class Utils {
         return query;
 
 
+    }
+
+    /**
+     * Returns a parameterized SELECT query using ? placeholders for values.
+     * Use this with DBTools.retrieveDataMySQL(parameters) to prevent SQL injection.
+     * @param _fields Comma-separated field names (will be escaped)
+     * @param _table Table name (will be escaped)
+     * @param _whereFields Array of field names for WHERE clause (will be escaped), can be null for no WHERE clause
+     * @return Parameterized SELECT query with ? placeholders
+     * @throws IllegalArgumentException if _fields or _table are null or empty
+     */
+    public static String selectParameterized(String _fields, String _table, String[] _whereFields) {
+        if (_fields == null || _fields.trim().isEmpty()) {
+            throw new IllegalArgumentException("Fields cannot be null or empty");
+        }
+        String tableName = escapeIdentifier(_table);
+        
+        // Parse and escape field names
+        String[] fields = _fields.split(",");
+        StringBuilder escapedFields = new StringBuilder();
+        for (int i = 0; i < fields.length; i++) {
+            String field = fields[i].trim();
+            if (field.equals("*")) {
+                escapedFields.append("*");
+            } else {
+                escapedFields.append(escapeIdentifier(field));
+            }
+            if (i < fields.length - 1) {
+                escapedFields.append(", ");
+            }
+        }
+        
+        if (_whereFields == null || _whereFields.length == 0) {
+            return String.format("SELECT %s FROM %s", escapedFields.toString(), tableName);
+        }
+        
+        // Build WHERE clause with placeholders
+        StringBuilder whereClause = new StringBuilder();
+        for (int i = 0; i < _whereFields.length; i++) {
+            whereClause.append(escapeIdentifier(_whereFields[i])).append(" = ?");
+            if (i < _whereFields.length - 1) {
+                whereClause.append(" AND ");
+            }
+        }
+        
+        return String.format("SELECT %s FROM %s WHERE %s", escapedFields.toString(), tableName, whereClause.toString());
     }
 
     /// <summary>
@@ -92,6 +157,34 @@ public class Utils {
         //RETORNA A QUERY
         return query;
 
+    }
+
+    /**
+     * Returns a parameterized INSERT query using ? placeholders for values.
+     * Use this with DBTools.executeQuery(parameters) to prevent SQL injection.
+     * @param _fields Array of field names (will be escaped)
+     * @param _table Table name (will be escaped)
+     * @return Parameterized INSERT query with ? placeholders
+     * @throws IllegalArgumentException if _fields is null or empty
+     */
+    public static String insertParameterized(String[] _fields, String _table) {
+        if (_fields == null || _fields.length == 0) {
+            throw new IllegalArgumentException("Fields array cannot be null or empty");
+        }
+        String tableName = escapeIdentifier(_table);
+        StringBuilder fields = new StringBuilder();
+        StringBuilder placeholders = new StringBuilder();
+        
+        for (int i = 0; i < _fields.length; i++) {
+            fields.append(escapeIdentifier(_fields[i]));
+            placeholders.append("?");
+            if (i < _fields.length - 1) {
+                fields.append(", ");
+                placeholders.append(", ");
+            }
+        }
+        
+        return String.format("INSERT INTO %s(%s) VALUES(%s)", tableName, fields.toString(), placeholders.toString());
     }
 
     /// <summary>
@@ -179,6 +272,45 @@ public class Utils {
 
 
     }
+    
+    /**
+     * Returns a parameterized UPDATE query using ? placeholders for values.
+     * Use this with DBTools.executeQuery(parameters) to prevent SQL injection.
+     * @param _fields Array of field names to update (will be escaped)
+     * @param _table Table name (will be escaped)
+     * @param _whereFields Array of field names for WHERE clause (will be escaped)
+     * @return Parameterized UPDATE query with ? placeholders
+     * @throws IllegalArgumentException if _fields or _whereFields are null or empty
+     */
+    public static String updateParameterized(String[] _fields, String _table, String[] _whereFields) {
+        if (_fields == null || _fields.length == 0) {
+            throw new IllegalArgumentException("Fields array cannot be null or empty");
+        }
+        if (_whereFields == null || _whereFields.length == 0) {
+            throw new IllegalArgumentException("WHERE fields array cannot be null or empty");
+        }
+        String tableName = escapeIdentifier(_table);
+        StringBuilder setClause = new StringBuilder();
+        
+        // Build SET clause with placeholders
+        for (int i = 0; i < _fields.length; i++) {
+            setClause.append(escapeIdentifier(_fields[i])).append(" = ?");
+            if (i < _fields.length - 1) {
+                setClause.append(", ");
+            }
+        }
+        
+        // Build WHERE clause with placeholders
+        StringBuilder whereClause = new StringBuilder();
+        for (int i = 0; i < _whereFields.length; i++) {
+            whereClause.append(escapeIdentifier(_whereFields[i])).append(" = ?");
+            if (i < _whereFields.length - 1) {
+                whereClause.append(" AND ");
+            }
+        }
+        
+        return String.format("UPDATE %s SET %s WHERE %s", tableName, setClause.toString(), whereClause.toString());
+    }
     /// <summary>
     /// Returns a Delete query<br/>
     /// For security reasons, the use of a condition is mandatory.
@@ -196,5 +328,32 @@ public class Utils {
         return query;
 
 
+    }
+    
+    /**
+     * Returns a parameterized DELETE query using ? placeholders for values.
+     * Use this with DBTools.executeQuery(parameters) to prevent SQL injection.
+     * For security reasons, the use of a WHERE clause is mandatory.
+     * @param _table Table name (will be escaped)
+     * @param _whereFields Array of field names for WHERE clause (will be escaped)
+     * @return Parameterized DELETE query with ? placeholders
+     * @throws IllegalArgumentException if _whereFields is null or empty
+     */
+    public static String deleteParameterized(String _table, String[] _whereFields) {
+        if (_whereFields == null || _whereFields.length == 0) {
+            throw new IllegalArgumentException("WHERE fields array cannot be null or empty - WHERE clause is mandatory for DELETE");
+        }
+        String tableName = escapeIdentifier(_table);
+        
+        // Build WHERE clause with placeholders
+        StringBuilder whereClause = new StringBuilder();
+        for (int i = 0; i < _whereFields.length; i++) {
+            whereClause.append(escapeIdentifier(_whereFields[i])).append(" = ?");
+            if (i < _whereFields.length - 1) {
+                whereClause.append(" AND ");
+            }
+        }
+        
+        return String.format("DELETE FROM %s WHERE %s", tableName, whereClause.toString());
     }
 }
