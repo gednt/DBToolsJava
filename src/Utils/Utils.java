@@ -2,6 +2,19 @@ package Utils;
 
 public class Utils {
     //MODULOS DE MANIPULAÇAO DE DADOS
+    
+    /**
+     * Escapes SQL identifiers (table names, column names) by wrapping them in backticks
+     * to prevent SQL injection on identifiers.
+     * @param identifier The identifier to escape
+     * @return The escaped identifier
+     */
+    private static String escapeIdentifier(String identifier) {
+        // Remove any existing backticks and wrap in backticks
+        // This prevents SQL injection on table/column names
+        return "`" + identifier.replace("`", "``") + "`";
+    }
+    
     /// <summary>
     /// Returns a String based on the parameters given<br/>
     /// </summary>
@@ -21,6 +34,48 @@ public class Utils {
         return query;
 
 
+    }
+
+    /**
+     * Returns a parameterized SELECT query using ? placeholders for values.
+     * Use this with DBTools.retrieveDataMySQL(parameters) to prevent SQL injection.
+     * @param _fields Comma-separated field names (will be escaped)
+     * @param _table Table name (will be escaped)
+     * @param _whereFields Array of field names for WHERE clause (will be escaped)
+     * @return Parameterized SELECT query with ? placeholders
+     */
+    public static String selectParameterized(String _fields, String _table, String[] _whereFields) {
+        String tableName = escapeIdentifier(_table);
+        
+        // Parse and escape field names
+        String[] fields = _fields.split(",");
+        StringBuilder escapedFields = new StringBuilder();
+        for (int i = 0; i < fields.length; i++) {
+            String field = fields[i].trim();
+            if (field.equals("*")) {
+                escapedFields.append("*");
+            } else {
+                escapedFields.append(escapeIdentifier(field));
+            }
+            if (i < fields.length - 1) {
+                escapedFields.append(", ");
+            }
+        }
+        
+        if (_whereFields == null || _whereFields.length == 0) {
+            return String.format("SELECT %s FROM %s", escapedFields.toString(), tableName);
+        }
+        
+        // Build WHERE clause with placeholders
+        StringBuilder whereClause = new StringBuilder();
+        for (int i = 0; i < _whereFields.length; i++) {
+            whereClause.append(escapeIdentifier(_whereFields[i])).append(" = ?");
+            if (i < _whereFields.length - 1) {
+                whereClause.append(" AND ");
+            }
+        }
+        
+        return String.format("SELECT %s FROM %s WHERE %s", escapedFields.toString(), tableName, whereClause.toString());
     }
 
     /// <summary>
@@ -92,6 +147,30 @@ public class Utils {
         //RETORNA A QUERY
         return query;
 
+    }
+
+    /**
+     * Returns a parameterized INSERT query using ? placeholders for values.
+     * Use this with DBTools.executeQuery(parameters) to prevent SQL injection.
+     * @param _fields Array of field names (will be escaped)
+     * @param _table Table name (will be escaped)
+     * @return Parameterized INSERT query with ? placeholders
+     */
+    public static String insertParameterized(String[] _fields, String _table) {
+        String tableName = escapeIdentifier(_table);
+        StringBuilder fields = new StringBuilder();
+        StringBuilder placeholders = new StringBuilder();
+        
+        for (int i = 0; i < _fields.length; i++) {
+            fields.append(escapeIdentifier(_fields[i]));
+            placeholders.append("?");
+            if (i < _fields.length - 1) {
+                fields.append(", ");
+                placeholders.append(", ");
+            }
+        }
+        
+        return String.format("INSERT INTO %s(%s) VALUES(%s)", tableName, fields.toString(), placeholders.toString());
     }
 
     /// <summary>
@@ -179,6 +258,38 @@ public class Utils {
 
 
     }
+    
+    /**
+     * Returns a parameterized UPDATE query using ? placeholders for values.
+     * Use this with DBTools.executeQuery(parameters) to prevent SQL injection.
+     * @param _fields Array of field names to update (will be escaped)
+     * @param _table Table name (will be escaped)
+     * @param _whereFields Array of field names for WHERE clause (will be escaped)
+     * @return Parameterized UPDATE query with ? placeholders
+     */
+    public static String updateParameterized(String[] _fields, String _table, String[] _whereFields) {
+        String tableName = escapeIdentifier(_table);
+        StringBuilder setClause = new StringBuilder();
+        
+        // Build SET clause with placeholders
+        for (int i = 0; i < _fields.length; i++) {
+            setClause.append(escapeIdentifier(_fields[i])).append(" = ?");
+            if (i < _fields.length - 1) {
+                setClause.append(", ");
+            }
+        }
+        
+        // Build WHERE clause with placeholders
+        StringBuilder whereClause = new StringBuilder();
+        for (int i = 0; i < _whereFields.length; i++) {
+            whereClause.append(escapeIdentifier(_whereFields[i])).append(" = ?");
+            if (i < _whereFields.length - 1) {
+                whereClause.append(" AND ");
+            }
+        }
+        
+        return String.format("UPDATE %s SET %s WHERE %s", tableName, setClause.toString(), whereClause.toString());
+    }
     /// <summary>
     /// Returns a Delete query<br/>
     /// For security reasons, the use of a condition is mandatory.
@@ -196,5 +307,28 @@ public class Utils {
         return query;
 
 
+    }
+    
+    /**
+     * Returns a parameterized DELETE query using ? placeholders for values.
+     * Use this with DBTools.executeQuery(parameters) to prevent SQL injection.
+     * For security reasons, the use of a WHERE clause is mandatory.
+     * @param _table Table name (will be escaped)
+     * @param _whereFields Array of field names for WHERE clause (will be escaped)
+     * @return Parameterized DELETE query with ? placeholders
+     */
+    public static String deleteParameterized(String _table, String[] _whereFields) {
+        String tableName = escapeIdentifier(_table);
+        
+        // Build WHERE clause with placeholders
+        StringBuilder whereClause = new StringBuilder();
+        for (int i = 0; i < _whereFields.length; i++) {
+            whereClause.append(escapeIdentifier(_whereFields[i])).append(" = ?");
+            if (i < _whereFields.length - 1) {
+                whereClause.append(" AND ");
+            }
+        }
+        
+        return String.format("DELETE FROM %s WHERE %s", tableName, whereClause.toString());
     }
 }
