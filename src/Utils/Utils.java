@@ -163,8 +163,12 @@ public class Utils {
      * @param _fields Array of field names (will be escaped)
      * @param _table Table name (will be escaped)
      * @return Parameterized INSERT query with ? placeholders
+     * @throws IllegalArgumentException if _fields is null or empty
      */
     public static String insertParameterized(String[] _fields, String _table) {
+        if (_fields == null || _fields.length == 0) {
+            throw new IllegalArgumentException("Fields array cannot be null or empty");
+        }
         String tableName = escapeIdentifier(_table);
         StringBuilder fields = new StringBuilder();
         StringBuilder placeholders = new StringBuilder();
@@ -274,8 +278,15 @@ public class Utils {
      * @param _table Table name (will be escaped)
      * @param _whereFields Array of field names for WHERE clause (will be escaped)
      * @return Parameterized UPDATE query with ? placeholders
+     * @throws IllegalArgumentException if _fields or _whereFields are null or empty
      */
     public static String updateParameterized(String[] _fields, String _table, String[] _whereFields) {
+        if (_fields == null || _fields.length == 0) {
+            throw new IllegalArgumentException("Fields array cannot be null or empty");
+        }
+        if (_whereFields == null || _whereFields.length == 0) {
+            throw new IllegalArgumentException("WHERE fields array cannot be null or empty");
+        }
         String tableName = escapeIdentifier(_table);
         StringBuilder setClause = new StringBuilder();
         
@@ -324,8 +335,12 @@ public class Utils {
      * @param _table Table name (will be escaped)
      * @param _whereFields Array of field names for WHERE clause (will be escaped)
      * @return Parameterized DELETE query with ? placeholders
+     * @throws IllegalArgumentException if _whereFields is null or empty
      */
     public static String deleteParameterized(String _table, String[] _whereFields) {
+        if (_whereFields == null || _whereFields.length == 0) {
+            throw new IllegalArgumentException("WHERE fields array cannot be null or empty - WHERE clause is mandatory for DELETE");
+        }
         String tableName = escapeIdentifier(_table);
         
         // Build WHERE clause with placeholders
