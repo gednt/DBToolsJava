@@ -47,7 +47,8 @@ public class Main_secure_example {
         String[] insertFields = {"title", "content", "userId"};
         db.setQuery(Utils.insertParameterized(insertFields, "opinions"));
         Object[] insertParams = {"Test Opinion", "This is a secure test", 123};
-        // db.executeQuery(insertParams);  // Uncomment to actually execute
+        // Commented out to prevent actual database modifications during demo
+        // db.executeQuery(insertParams);
         System.out.println("Query: " + db.getQuery());
         System.out.println("Parameters: " + java.util.Arrays.toString(insertParams));
         
@@ -57,7 +58,8 @@ public class Main_secure_example {
         String[] updateWhereFields = {"idOpinion"};
         db.setQuery(Utils.updateParameterized(updateFields, "opinions", updateWhereFields));
         Object[] updateParams = {"Updated Title", "Updated Content", 46};
-        // db.executeQuery(updateParams);  // Uncomment to actually execute
+        // Commented out to prevent actual database modifications during demo
+        // db.executeQuery(updateParams);
         System.out.println("Query: " + db.getQuery());
         System.out.println("Parameters: " + java.util.Arrays.toString(updateParams));
         
@@ -66,7 +68,8 @@ public class Main_secure_example {
         String[] deleteWhereFields = {"idOpinion"};
         db.setQuery(Utils.deleteParameterized("opinions", deleteWhereFields));
         Object[] deleteParams = {99};
-        // db.executeQuery(deleteParams);  // Uncomment to actually execute
+        // Commented out to prevent actual database modifications during demo
+        // db.executeQuery(deleteParams);
         System.out.println("Query: " + db.getQuery());
         System.out.println("Parameters: " + java.util.Arrays.toString(deleteParams));
         

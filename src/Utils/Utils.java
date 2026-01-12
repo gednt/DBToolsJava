@@ -8,8 +8,12 @@ public class Utils {
      * to prevent SQL injection on identifiers.
      * @param identifier The identifier to escape
      * @return The escaped identifier
+     * @throws IllegalArgumentException if identifier is null or empty
      */
     private static String escapeIdentifier(String identifier) {
+        if (identifier == null || identifier.trim().isEmpty()) {
+            throw new IllegalArgumentException("Identifier cannot be null or empty");
+        }
         // Remove any existing backticks and wrap in backticks
         // This prevents SQL injection on table/column names
         return "`" + identifier.replace("`", "``") + "`";
@@ -41,10 +45,14 @@ public class Utils {
      * Use this with DBTools.retrieveDataMySQL(parameters) to prevent SQL injection.
      * @param _fields Comma-separated field names (will be escaped)
      * @param _table Table name (will be escaped)
-     * @param _whereFields Array of field names for WHERE clause (will be escaped)
+     * @param _whereFields Array of field names for WHERE clause (will be escaped), can be null for no WHERE clause
      * @return Parameterized SELECT query with ? placeholders
+     * @throws IllegalArgumentException if _fields or _table are null or empty
      */
     public static String selectParameterized(String _fields, String _table, String[] _whereFields) {
+        if (_fields == null || _fields.trim().isEmpty()) {
+            throw new IllegalArgumentException("Fields cannot be null or empty");
+        }
         String tableName = escapeIdentifier(_table);
         
         // Parse and escape field names

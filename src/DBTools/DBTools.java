@@ -118,6 +118,7 @@ public class DBTools {
     /**
      * Retrieve data from MySQL using parameterized query to prevent SQL injection.
      * @param parameters Array of parameter values to bind to the query. Use null for queries without parameters.
+     * @throws IllegalArgumentException if parameter count doesn't match placeholders in query
      */
     public void retrieveDataMySQL(Object[] parameters){
         try {
@@ -127,6 +128,13 @@ public class DBTools {
             
             // Bind parameters if provided
             if (parameters != null) {
+                // Validate parameter count matches placeholders
+                int expectedParams = stmt.getParameterMetaData().getParameterCount();
+                if (parameters.length != expectedParams) {
+                    throw new IllegalArgumentException(
+                        String.format("Parameter count mismatch: expected %d, got %d", expectedParams, parameters.length)
+                    );
+                }
                 for (int i = 0; i < parameters.length; i++) {
                     stmt.setObject(i + 1, parameters[i]);
                 }
@@ -161,6 +169,7 @@ public class DBTools {
      * Execute a query (INSERT, UPDATE, DELETE, etc.) using parameterized query to prevent SQL injection.
      * @param parameters Array of parameter values to bind to the query. Use null for queries without parameters.
      * @return true if the first result is a ResultSet object; false if it is an update count or there are no results
+     * @throws IllegalArgumentException if parameter count doesn't match placeholders in query
      */
     public boolean executeQuery(Object[] parameters) {
         try{
@@ -169,6 +178,13 @@ public class DBTools {
             
             // Bind parameters if provided
             if (parameters != null) {
+                // Validate parameter count matches placeholders
+                int expectedParams = stmt.getParameterMetaData().getParameterCount();
+                if (parameters.length != expectedParams) {
+                    throw new IllegalArgumentException(
+                        String.format("Parameter count mismatch: expected %d, got %d", expectedParams, parameters.length)
+                    );
+                }
                 for (int i = 0; i < parameters.length; i++) {
                     stmt.setObject(i + 1, parameters[i]);
                 }
