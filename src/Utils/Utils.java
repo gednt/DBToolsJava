@@ -6,15 +6,17 @@ public class Utils {
     /**
      * Escapes SQL identifiers (table names, column names) by wrapping them in backticks
      * to prevent SQL injection on identifiers.
+     * MySQL-specific: Backticks within the identifier are escaped by doubling them (` becomes ``).
+     * For example: `my`table` becomes `my``table`
      * @param identifier The identifier to escape
-     * @return The escaped identifier
+     * @return The escaped identifier wrapped in backticks
      * @throws IllegalArgumentException if identifier is null or empty
      */
     private static String escapeIdentifier(String identifier) {
         if (identifier == null || identifier.trim().isEmpty()) {
             throw new IllegalArgumentException("Identifier cannot be null or empty");
         }
-        // Remove any existing backticks and wrap in backticks
+        // Double any existing backticks, then wrap the entire identifier in backticks
         // This prevents SQL injection on table/column names
         return "`" + identifier.replace("`", "``") + "`";
     }
